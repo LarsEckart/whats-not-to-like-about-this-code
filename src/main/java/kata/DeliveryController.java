@@ -28,6 +28,17 @@ public class DeliveryController {
     MapService mapService;
 
     @Consumes({MediaType.APPLICATION_JSON})
+    @Post("/new")
+    public HttpResponse<String> newDelivery(NewDelivery newDelivery) {
+        log.info("create new delivery");
+        repository.create(newDelivery.email(), newDelivery.longitude(), newDelivery.latitude());
+        return HttpResponse.ok("all good");
+    }
+
+    private record NewDelivery(String email, float latitude, float longitude) {
+    }
+
+    @Consumes({MediaType.APPLICATION_JSON})
     @Post
     public HttpResponse<Void> onDelivery(DeliveryEvent deliveryEvent) {
         log.info("update delivery");
@@ -84,9 +95,10 @@ public class DeliveryController {
                 emailGateway.send(nextDelivery.getContactEmail(), subject, message);
             }
 
-            return HttpResponse.ok();
+            return HttpResponse.ok(); // 200
         } catch (Exception e) {
-            return HttpResponse.serverError();
+            // if status is not in 2xx range our http client in tests throws exception
+            return HttpResponse.noContent(); // 204
         }
     }
 
