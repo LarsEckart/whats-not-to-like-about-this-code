@@ -24,6 +24,20 @@ public class DeliveryRepository {
     }
 
     @Transactional
+    public void create(String email, float lat, float lon) {
+        String sql =
+                """
+                        INSERT INTO Delivery (email, date_of_order, latitude, longitude)
+                        VALUES ('%s',CURRENT_TIMESTAMP(),%s,%s);
+                        """.formatted(email, lat, lon);
+        jdbcOperations.prepareStatement(sql, statement -> {
+                    statement.execute();
+                    return null;
+                }
+        );
+    }
+
+    @Transactional
     public List<Delivery> findTodaysDeliveries() {
         String sql = "SELECT * FROM Delivery WHERE FORMATDATETIME(date_of_order, 'yyyy-MM-dd') = CURRENT_DATE()";
         return jdbcOperations.prepareStatement(sql, statement -> {

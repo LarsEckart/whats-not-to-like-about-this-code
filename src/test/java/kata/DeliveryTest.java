@@ -21,9 +21,18 @@ class DeliveryTest {
 
     @Test
     void it_works() {
-        var postRequest = HttpRequest.POST("/delivery", """
+        var postRequest = HttpRequest.POST("/delivery/new", """
                 {
-                  "id": 1,
+                  "email": "test@example.com",
+                  "latitude": 58.377065,
+                  "longitude": 26.727897
+                }"""
+        );
+
+        client.toBlocking().exchange(postRequest);
+        postRequest = HttpRequest.POST("/delivery", """
+                {
+                  "id": 2,
                   "timeOfDelivery": "%s",
                   "latitude": 58.377066,
                   "longitude": 26.727897
