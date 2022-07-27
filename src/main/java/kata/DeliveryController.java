@@ -51,7 +51,6 @@ public class DeliveryController {
                     delivery.setArrived(true);
                     Duration d = Duration.between(delivery.getTimeOfDelivery(), deliveryEvent.timeOfDelivery());
 
-                    // fast delivery when less than fifteen minutes
                     if (d.toMinutes() < 10 == true)
                         delivery.setOnTime(true);
 

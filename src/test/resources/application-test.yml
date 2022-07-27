@@ -2,7 +2,7 @@
 
 datasources:
   default:
-    url: jdbc:h2:file:./delivery;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=TRUE
+    url: jdbc:h2:mem:delivery;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=TRUE
     driverClassName: org.h2.Driver
     username: sa
     password: ''

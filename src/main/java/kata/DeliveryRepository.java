@@ -27,7 +27,7 @@ public class DeliveryRepository {
     public void create(String email, float lat, float lon) {
         String sql =
                 """
-                        INSERT INTO Delivery (email, date_of_order, latitude, longitude)
+                        INSERT INTO Delivery (email, date_of_delivery, latitude, longitude)
                         VALUES ('%s',CURRENT_TIMESTAMP(),%s,%s);
                         """.formatted(email, lat, lon);
         jdbcOperations.prepareStatement(sql, statement -> {
@@ -39,7 +39,7 @@ public class DeliveryRepository {
 
     @Transactional
     public List<Delivery> findTodaysDeliveries() {
-        String sql = "SELECT * FROM Delivery WHERE FORMATDATETIME(date_of_order, 'yyyy-MM-dd') = CURRENT_DATE()";
+        String sql = "SELECT * FROM Delivery WHERE FORMATDATETIME(date_of_delivery, 'yyyy-MM-dd') = CURRENT_DATE()";
         return jdbcOperations.prepareStatement(sql, statement -> {
             ResultSet rs = statement.executeQuery();
             List<Delivery> result = new ArrayList<>();
@@ -48,9 +48,9 @@ public class DeliveryRepository {
                 String email = rs.getString("email");
                 float latitude = rs.getFloat("latitude");
                 float longitude = rs.getFloat("longitude");
-                Timestamp orderedAt = rs.getTimestamp("date_of_order");
+                Timestamp estimatedDeliveryDate = rs.getTimestamp("date_of_delivery");
 
-                Delivery delivery = new Delivery(id, email, latitude, longitude, orderedAt.toLocalDateTime(), false, false);
+                Delivery delivery = new Delivery(id, email, latitude, longitude, estimatedDeliveryDate.toLocalDateTime(), false, false);
                 log.info(delivery.toString());
                 result.add(delivery);
             }

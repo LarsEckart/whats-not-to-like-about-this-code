@@ -4,9 +4,7 @@ CREATE TABLE Delivery
 (
     id               integer     NOT NULL DEFAULT nextval('delivery_id_seq') PRIMARY KEY,
     email            varchar(50) NOT NULL,
-    phone            varchar(15),
-    date_of_order    timestamp   NOT NULL,
-    date_of_delivery timestamp,
+    date_of_delivery timestamp   NOT NULL,
     arrived          boolean,
     onTime           boolean,
     latitude         float       NOT NULL,
