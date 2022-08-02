@@ -6,6 +6,7 @@ import io.micronaut.http.annotation.Consumes;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Post;
 import jakarta.inject.Inject;
+import java.time.ZoneOffset;
 import org.slf4j.Logger;
 
 import java.time.Duration;
@@ -49,9 +50,12 @@ public class DeliveryController {
                 Delivery delivery = deliverySchedule.get(i);
                 if (deliveryEvent.id() == delivery.getId()) {
                     delivery.setArrived(true);
-                    Duration d = Duration.between(delivery.getTimeOfDelivery(), deliveryEvent.timeOfDelivery());
+                    long millis = delivery.getTimeOfDelivery().toInstant(ZoneOffset.UTC).toEpochMilli()
+                        - deliveryEvent.timeOfDelivery().toInstant(ZoneOffset.UTC).toEpochMilli();
 
-                    if (d.toMinutes() < 10 == true)
+                    long earlyOrLateInMinutes = Math.abs((millis / 1000) / 60);
+
+                    if (earlyOrLateInMinutes < 10 == true)
                         delivery.setOnTime(true);
 
                     delivery.setTimeOfDelivery(deliveryEvent.timeOfDelivery());
