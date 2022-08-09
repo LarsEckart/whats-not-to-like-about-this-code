@@ -1,7 +1,7 @@
 What’s Not To Like About This Code?
 ===================================
 
-Clarify what problem you see in the code, rather than how you would improve it.
+Clarify what problem(s) you see in the code, rather than how you would improve it.
 
 
 Practical Task
