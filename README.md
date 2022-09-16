@@ -21,7 +21,6 @@ We'd like you to help us with
 * implement the missing functionality:
   sending SMS in case we not only have an email address but also have a phone number associated with a delivery.
 
-
 The feature after that, notifications through the new messenger app, will be handled by our developer then.
 
 Example coordinates can be found from [LatLong.net](https://www.latlong.net/)
