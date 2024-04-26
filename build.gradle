@@ -2,7 +2,7 @@ plugins {
     id 'java'
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("io.micronaut.application") version "3.6.2"
-    id("io.micronaut.aot") version "3.6.2"
+    id("io.micronaut.aot") version "4.3.7"
 }
 
 repositories {
