@@ -1,0 +1,12 @@
+
+@url = http://localhost:8080
+
+
+POST {{url}}/delivery/new
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "latitude": 58.377065,
+  "longitude": 26.727897
+}

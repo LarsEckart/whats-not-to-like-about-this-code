@@ -81,17 +81,14 @@ public final class Delivery {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        Delivery delivery = (Delivery) o;
-        return Float.compare(delivery.latitude, latitude) == 0
-                && Float.compare(delivery.longitude, longitude) == 0 && arrived == delivery.arrived
-                && onTime == delivery.onTime && id.equals(delivery.id) && contactEmail.equals(
-                delivery.contactEmail) && timeOfDelivery.equals(delivery.timeOfDelivery);
+        return (o instanceof Delivery otherDelivery) &&
+               Objects.equals(id, otherDelivery.id) &&
+               Objects.equals(contactEmail, otherDelivery.contactEmail) &&
+               Objects.equals(latitude, otherDelivery.latitude) &&
+               Objects.equals(longitude, otherDelivery.longitude) &&
+               Objects.equals(timeOfDelivery, otherDelivery.timeOfDelivery) &&
+               Objects.equals(arrived, otherDelivery.arrived) &&
+               Objects.equals(onTime, otherDelivery.onTime);
     }
 
     @Override
@@ -102,13 +99,13 @@ public final class Delivery {
     @Override
     public String toString() {
         return "Delivery{" +
-                "id=" + id +
-                ", contactEmail='" + contactEmail + '\'' +
-                ", latitude=" + latitude +
-                ", longitude=" + longitude +
-                ", timeOfDelivery=" + timeOfDelivery +
-                ", arrived=" + arrived +
-                ", onTime=" + onTime +
-                '}';
+               "id=" + id +
+               ", contactEmail='" + contactEmail + '\'' +
+               ", latitude=" + latitude +
+               ", longitude=" + longitude +
+               ", timeOfDelivery=" + timeOfDelivery +
+               ", arrived=" + arrived +
+               ", onTime=" + onTime +
+               '}';
     }
 }

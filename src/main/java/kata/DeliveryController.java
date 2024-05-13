@@ -1,57 +1,59 @@
 package kata;
 
-import io.micronaut.http.HttpResponse;
-import io.micronaut.http.MediaType;
-import io.micronaut.http.annotation.Consumes;
-import io.micronaut.http.annotation.Controller;
-import io.micronaut.http.annotation.Post;
-import jakarta.inject.Inject;
-import java.time.ZoneOffset;
 import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
-@Controller("/delivery")
+@RestController
+@RequestMapping("/delivery")
 public class DeliveryController {
 
     private static final Logger log = getLogger(DeliveryController.class);
 
-    @Inject
+    @Autowired
     DeliveryRepository repository;
-    @Inject
+    @Autowired
     SendgridEmailGatewayImpl emailGateway;
-    @Inject
+    @Autowired
     MapService mapService;
 
-    @Consumes({MediaType.APPLICATION_JSON})
-    @Post("/new")
-    public HttpResponse<String> newDelivery(NewDelivery newDelivery) {
+    @PostMapping(value = "/new", consumes = MediaType.APPLICATION_JSON_VALUE)
+
+    public ResponseEntity<String> newDelivery(@RequestBody NewDelivery newDelivery) {
         log.info("create new delivery");
         repository.create(newDelivery.email(), newDelivery.longitude(), newDelivery.latitude());
-        return HttpResponse.ok("all good");
+        return ResponseEntity.ok("all good");
     }
 
-    private record NewDelivery(String email, float latitude, float longitude) {
-    }
-
-    @Consumes({MediaType.APPLICATION_JSON})
-    @Post
-    public HttpResponse<Void> onDelivery(DeliveryEvent deliveryEvent) {
+    @PostMapping(value = "/update", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseStatus(HttpStatus.OK)
+    public void onDelivery(@RequestBody DeliveryEvent deliveryEvent) {
         log.info("update delivery");
         try {
             List<Delivery> deliverySchedule = repository.findTodaysDeliveries();
             Delivery nextDelivery = null;
             for (int i = 0; i < deliverySchedule.size(); i++) {
                 Delivery delivery = deliverySchedule.get(i);
+                // find current delivery
                 if (deliveryEvent.id() == delivery.getId()) {
                     delivery.setArrived(true);
                     long millis = delivery.getTimeOfDelivery().toInstant(ZoneOffset.UTC).toEpochMilli()
-                        - deliveryEvent.timeOfDelivery().toInstant(ZoneOffset.UTC).toEpochMilli();
+                                  - deliveryEvent.timeOfDelivery().toInstant(ZoneOffset.UTC).toEpochMilli();
 
                     long earlyOrLateInMinutes = Math.abs((millis / 1000) / 60);
 
@@ -61,12 +63,13 @@ public class DeliveryController {
                     delivery.setTimeOfDelivery(deliveryEvent.timeOfDelivery());
                     String message =
                             """
-                                    Regarding your delivery today at %s.
-                                    How likely would you be to recommend this delivery service to a friend? 
-                                                            
-                                    Click <a href='http://example.com/feedback'>here</a>""".formatted(
+                            Regarding your delivery today at %s.
+                            How likely would you be to recommend this delivery service to a friend?
+                            
+                            Click <a href='http://example.com/feedback'>here</a>""".formatted(
                                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").format(delivery.getTimeOfDelivery()));
                     emailGateway.send(delivery.getContactEmail(), "Your feedback is important to us", message);
+                    // check for existence of delivery after current one
                     if (deliverySchedule.size() > i + 1) {
                         nextDelivery = deliverySchedule.get(i + 1);
                     }
@@ -75,10 +78,8 @@ public class DeliveryController {
                         var previousDelivery = deliverySchedule.get(i - 1);
                         Duration elapsedTime =
                                 Duration.between(previousDelivery.getTimeOfDelivery(), delivery.getTimeOfDelivery());
-                        mapService.updateAverageSpeed(
-                                elapsedTime, previousDelivery.getLatitude(),
-                                previousDelivery.getLongitude(), delivery.getLatitude(),
-                                delivery.getLongitude());
+                        mapService.updateAverageSpeed(elapsedTime, previousDelivery.getLongitude(),
+                                previousDelivery.getLatitude(), delivery.getLongitude(), delivery.getLatitude());
                     }
                     repository.save(delivery);
                 }
@@ -86,23 +87,24 @@ public class DeliveryController {
 
             if (nextDelivery != null) {
                 var nextEta = mapService.calculateETA(
-                        deliveryEvent.latitude(), deliveryEvent.longitude(),
-                        nextDelivery.getLatitude(), nextDelivery.getLongitude());
+                        deliveryEvent.longitude(), deliveryEvent.latitude(),
+                        nextDelivery.getLongitude(), nextDelivery.getLatitude());
                 String subject = "Your delivery will arrive soon";
                 var message =
                         "Your delivery to [%s,%s] is next, estimated time of arrival is in %s minutes. Be ready!"
                                 .formatted(
-                                        nextDelivery.getLatitude(),
                                         nextDelivery.getLongitude(),
+                                        nextDelivery.getLatitude(),
                                         nextEta.getSeconds() / 60);
                 emailGateway.send(nextDelivery.getContactEmail(), subject, message);
             }
 
-            return HttpResponse.ok(); // 200
         } catch (Exception e) {
-            // if status is not in 2xx range our http client in tests throws exception
-            return HttpResponse.noContent(); // 204
+
         }
+    }
+
+    private record NewDelivery(String email, Float latitude, Float longitude) {
     }
 
     private record DeliveryEvent(long id, LocalDateTime timeOfDelivery, float latitude, float longitude) {
