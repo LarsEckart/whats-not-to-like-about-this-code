@@ -40,6 +40,9 @@ public class DeliveryController {
         return ResponseEntity.ok("all good");
     }
 
+    public record NewDelivery(String email, Float latitude, Float longitude) {
+    }
+
     @PostMapping(value = "/update", consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.OK)
     public void onDelivery(@RequestBody DeliveryEvent deliveryEvent) {
@@ -63,10 +66,10 @@ public class DeliveryController {
                     delivery.setTimeOfDelivery(deliveryEvent.timeOfDelivery());
                     String message =
                             """
-                            Regarding your delivery today at %s.
-                            How likely would you be to recommend this delivery service to a friend?
-                            
-                            Click <a href='http://example.com/feedback'>here</a>""".formatted(
+                                Regarding your delivery today at %s.
+                                How likely would you be to recommend this delivery service to a friend?
+                                
+                                Click <a href='http://example.com/feedback'>here</a>""".formatted(
                                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").format(delivery.getTimeOfDelivery()));
                     emailGateway.send(delivery.getContactEmail(), "Your feedback is important to us", message);
                     // check for existence of delivery after current one
@@ -104,10 +107,7 @@ public class DeliveryController {
         }
     }
 
-    private record NewDelivery(String email, Float latitude, Float longitude) {
-    }
-
-    private record DeliveryEvent(long id, LocalDateTime timeOfDelivery, float latitude, float longitude) {
+    public record DeliveryEvent(long id, LocalDateTime timeOfDelivery, float latitude, float longitude) {
     }
 
 }
