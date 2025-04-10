@@ -19,7 +19,9 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.LocalDateTime;
+import java.util.Random;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
@@ -43,10 +45,17 @@ class IntegrationTest {
     @Autowired
     private DeliveryRepository deliveryRepository;
 
+    @Autowired
+    private MapService mapService;
+    public Random random = new Random(42L);
+
     @Test
-    void it_sends_emails() {
+    void it_works() {
         registerNewDelivery(httpHeaders(), "test@example.com");
         registerNewDelivery(httpHeaders(), "test2@example.com");
+        registerNewDelivery(httpHeaders(), "test3@example.com");
+        registerNewDelivery(httpHeaders(), "test4@example.com");
+        registerNewDelivery(httpHeaders(), "test5@example.com");
 
         String deliveryJson = """
                 {
@@ -73,6 +82,38 @@ class IntegrationTest {
         Delivery delivery = deliveryRepository.findTodaysDeliveries().stream().filter(d -> d.getId() == 1).findFirst().orElseThrow();
         assertThat(delivery.isArrived()).isTrue();
         assertThat(delivery.isOnTime()).isTrue();
+
+        // verify avg speed in MapService
+        assertThat(mapService.averageSpeed).isEqualTo(50.0);
+
+        // slower delivery
+        String deliveryJson2 = """
+                {
+                  "id": 2,
+                  "timeOfDelivery": "%s",
+                  "latitude": 58.377066,
+                  "longitude": 26.727897
+                }""".formatted(LocalDateTime.now().plusMinutes(11));
+        HttpEntity<String> deliveryRequest2 = new HttpEntity<>(deliveryJson2, httpHeaders());
+        restTemplate.exchange("/delivery/update", HttpMethod.POST, deliveryRequest2, String.class);
+
+        Delivery delivery2 = deliveryRepository.findTodaysDeliveries().stream().filter(d -> d.getId() == 2).findFirst().orElseThrow();
+        assertThat(delivery2.isArrived()).isTrue();
+        assertThat(delivery2.isOnTime()).isFalse();
+
+        // another late delivery
+        String deliveryJson3 = """
+                {
+                  "id": 3,
+                  "timeOfDelivery": "%s",
+                  "latitude": 58.377088,
+                  "longitude": 26.727897
+                }""".formatted(LocalDateTime.now().plusMinutes(12));
+        HttpEntity<String> deliveryRequest3 = new HttpEntity<>(deliveryJson3, httpHeaders());
+        restTemplate.exchange("/delivery/update", HttpMethod.POST, deliveryRequest3, String.class);
+
+
+        assertThat(mapService.averageSpeed).isEqualTo(0.47750456791852863);
     }
 
     private static @NotNull HttpHeaders httpHeaders() {
@@ -82,12 +123,13 @@ class IntegrationTest {
     }
 
     private void registerNewDelivery(HttpHeaders headers, String mail) {
+        int i = random.nextInt(19);
         String newDeliveryJson = """
                 {
                   "email": "%s",
-                  "latitude": 58.377065,
+                  "latitude": 58.3770%d,
                   "longitude": 26.727897
-                }""".formatted(mail);
+                }""".formatted(mail, i);
 
         HttpEntity<String> newDeliveryRequest = new HttpEntity<>(newDeliveryJson, headers);
         restTemplate.exchange("/delivery/new", HttpMethod.POST, newDeliveryRequest, String.class);

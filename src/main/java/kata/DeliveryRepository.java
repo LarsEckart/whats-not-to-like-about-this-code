@@ -48,6 +48,8 @@ public class DeliveryRepository {
             log.info(delivery.toString());
             return delivery;
         });
+        // sort by ID. usually probably by time or so but for this scenario, it is what it is
+        deliveries.sort((d1, d2) -> Long.compare(d1.getId(), d2.getId()));
         return deliveries;
     }
 

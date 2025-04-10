@@ -8,7 +8,7 @@ import java.time.Duration;
 public class MapService {
 
     // in km/h
-    private double averageSpeed = 50.0;
+    public double averageSpeed = 50.0;
 
     private final int MINUTES_PER_HOUR = 60;
     private final int SECONDS_PER_HOUR = 3600;
