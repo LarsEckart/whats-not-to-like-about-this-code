@@ -44,7 +44,7 @@ public class DeliveryRepository {
             boolean hasArrived = rs.getBoolean("arrived");
             boolean onTime = rs.getBoolean("onTime");
 
-            Delivery delivery = new Delivery(id, email, longitude, latitude, estimatedDeliveryDate.toLocalDateTime(), hasArrived, onTime);
+            Delivery delivery = new Delivery(id, email, latitude, longitude, estimatedDeliveryDate.toLocalDateTime(), hasArrived, onTime);
             log.info(delivery.toString());
             return delivery;
         });
