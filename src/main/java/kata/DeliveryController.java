@@ -28,7 +28,7 @@ public class DeliveryController {
     @Autowired
     DeliveryRepository repository;
     @Autowired
-    SendgridEmailGatewayImpl emailGateway;
+    EmailGateway emailGateway;
     @Autowired
     MapService mapService;
 

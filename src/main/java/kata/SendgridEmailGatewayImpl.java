@@ -15,10 +15,11 @@ import java.io.IOException;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Component
-public class SendgridEmailGatewayImpl {
+public class SendgridEmailGatewayImpl implements EmailGateway {
 
     private static final Logger log = getLogger(SendgridEmailGatewayImpl.class);
 
+    @Override
     public void send(String to, String s, String m) {
         Email from = new Email("deliveries@example.com");
         Content content = new Content("text/plain", m);

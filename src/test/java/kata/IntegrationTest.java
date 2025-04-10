@@ -5,8 +5,10 @@ import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -56,5 +58,13 @@ class IntegrationTest {
         HttpEntity<String> deliveryRequest = new HttpEntity<>(deliveryJson, headers);
         restTemplate.exchange("/delivery/update", HttpMethod.POST, deliveryRequest, String.class);
 
+    }
+
+    @TestConfiguration
+    static class TestConfig {
+        @Bean
+        public EmailGateway emailGateway() {
+            return new NoOpEmailGateway();
+        }
     }
 }

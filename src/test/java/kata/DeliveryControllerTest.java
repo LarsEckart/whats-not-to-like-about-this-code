@@ -7,6 +7,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.quality.Strictness;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -28,7 +30,7 @@ class DeliveryControllerTest {
     private MapService mapService;
 
     @Mock
-    private SendgridEmailGatewayImpl sendgridEmailGatewayImpl;
+    private EmailGateway emailGateway;
 
     @InjectMocks
     private DeliveryController deliveryController;
@@ -50,14 +52,14 @@ class DeliveryControllerTest {
         deliveryController.onDelivery(deliveryEvent);
         verify(deliveryRepository).save(delivery);
         verify(mapService).calculateETA(0.0f, 0.0f, 1.0f, 1.0f);
-        verify(sendgridEmailGatewayImpl).send("test@test.test",
+        verify(emailGateway).send("test@test.test",
                 "Your feedback is important to us",
                 """
                         Regarding your delivery today at %s.
                         How likely would you be to recommend this delivery service to a friend?
 
                         Click <a href='http://example.com/feedback'>here</a>""".formatted(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").format(now.minusMinutes(1))));
-        verify(sendgridEmailGatewayImpl).send("test@test.test", "Your delivery will arrive soon", "Your delivery to [1.0,1.0] is next, estimated time of arrival is in 5 minutes. Be ready!");
+        verify(emailGateway).send("test@test.test", "Your delivery will arrive soon", "Your delivery to [1.0,1.0] is next, estimated time of arrival is in 5 minutes. Be ready!");
     }
 
     private static Delivery testDelivery(long id, LocalDateTime timeOfDelivery) {
