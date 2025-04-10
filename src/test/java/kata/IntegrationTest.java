@@ -19,6 +19,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.LocalDateTime;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
@@ -33,6 +35,9 @@ class IntegrationTest {
 
     @Autowired
     private TestRestTemplate restTemplate;
+
+    @Autowired
+    private NoOpEmailGateway emailGateway;
 
     @Test
     void it_works() {
@@ -50,13 +55,18 @@ class IntegrationTest {
 
         String deliveryJson = """
                 {
-                  "id": 2,
+                  "id": 1,
                   "timeOfDelivery": "%s",
                   "latitude": 58.377066,
                   "longitude": 26.727897
                 }""".formatted(LocalDateTime.now());
         HttpEntity<String> deliveryRequest = new HttpEntity<>(deliveryJson, headers);
         restTemplate.exchange("/delivery/update", HttpMethod.POST, deliveryRequest, String.class);
+
+        // Verify the email sent
+        assertThat(emailGateway.getLastRecipient()).isEqualTo("test@example.com");
+        assertThat(emailGateway.getLastSubject()).isNotNull();
+        assertThat(emailGateway.getLastMessage()).contains("Regarding your delivery today at ", "How likely would you be to recommend this delivery service to a friend?");
 
     }
 
