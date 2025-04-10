@@ -35,17 +35,20 @@ public class DeliveryRepository {
 
     public List<Delivery> findTodaysDeliveries() {
         String sql = "SELECT * FROM Delivery WHERE DATE(date_of_delivery) = CURRENT_DATE";
-        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+        List<Delivery> deliveries = jdbcTemplate.query(sql, (rs, rowNum) -> {
             long id = rs.getLong("id");
             String email = rs.getString("email");
             float latitude = rs.getFloat("latitude");
             float longitude = rs.getFloat("longitude");
             Timestamp estimatedDeliveryDate = rs.getTimestamp("date_of_delivery");
+            boolean hasArrived = rs.getBoolean("arrived");
+            boolean onTime = rs.getBoolean("onTime");
 
-            Delivery delivery = new Delivery(id, email, longitude, latitude, estimatedDeliveryDate.toLocalDateTime(), false, false);
+            Delivery delivery = new Delivery(id, email, longitude, latitude, estimatedDeliveryDate.toLocalDateTime(), hasArrived, onTime);
             log.info(delivery.toString());
             return delivery;
         });
+        return deliveries;
     }
 
     public void save(Delivery delivery) {

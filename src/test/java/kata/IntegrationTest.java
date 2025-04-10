@@ -29,7 +29,7 @@ class IntegrationTest {
 
     @Container
     @ServiceConnection
-    static PostgreSQLContainer<?> pgvector = new PostgreSQLContainer<>("postgres:13.3")
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:13.3")
             .withDatabaseName("delivery")
             .withUsername("admin")
             .withPassword("admin");
@@ -40,9 +40,11 @@ class IntegrationTest {
     @Autowired
     private NoOpEmailGateway emailGateway;
 
-    @Test
-    void it_works() {
+    @Autowired
+    private DeliveryRepository deliveryRepository;
 
+    @Test
+    void it_sends_emails() {
         registerNewDelivery(httpHeaders(), "test@example.com");
         registerNewDelivery(httpHeaders(), "test2@example.com");
 
@@ -66,6 +68,11 @@ class IntegrationTest {
         assertThat(emailGateway.getSentEmails().get(0).recipient()).isEqualTo("test@example.com");
         assertThat(emailGateway.getSentEmails().get(0).subject()).isEqualTo("Your feedback is important to us");
         assertThat(emailGateway.getSentEmails().get(0).message()).contains("Regarding your delivery today at ", "How likely would you be to recommend this delivery service to a friend?");
+
+        // verify state of Delivery
+        Delivery delivery = deliveryRepository.findTodaysDeliveries().stream().filter(d -> d.getId() == 1).findFirst().orElseThrow();
+        assertThat(delivery.isArrived()).isTrue();
+        assertThat(delivery.isOnTime()).isTrue();
     }
 
     private static @NotNull HttpHeaders httpHeaders() {
