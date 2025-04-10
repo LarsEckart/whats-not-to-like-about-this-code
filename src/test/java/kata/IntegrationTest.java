@@ -1,5 +1,6 @@
 package kata;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
@@ -41,11 +42,9 @@ class IntegrationTest {
 
     @Test
     void it_works() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
 
-        registerNewDelivery(headers, "test@example.com");
-        registerNewDelivery(headers, "test2@example.com");
+        registerNewDelivery(httpHeaders(), "test@example.com");
+        registerNewDelivery(httpHeaders(), "test2@example.com");
 
         String deliveryJson = """
                 {
@@ -54,7 +53,7 @@ class IntegrationTest {
                   "latitude": 58.377066,
                   "longitude": 26.727897
                 }""".formatted(LocalDateTime.now());
-        HttpEntity<String> deliveryRequest = new HttpEntity<>(deliveryJson, headers);
+        HttpEntity<String> deliveryRequest = new HttpEntity<>(deliveryJson, httpHeaders());
         restTemplate.exchange("/delivery/update", HttpMethod.POST, deliveryRequest, String.class);
 
         // Verify the email sent
@@ -69,6 +68,12 @@ class IntegrationTest {
         assertThat(emailGateway.getSentEmails().get(0).message()).contains("Regarding your delivery today at ", "How likely would you be to recommend this delivery service to a friend?");
     }
 
+    private static @NotNull HttpHeaders httpHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return headers;
+    }
+
     private void registerNewDelivery(HttpHeaders headers, String mail) {
         String newDeliveryJson = """
                 {
@@ -79,6 +84,23 @@ class IntegrationTest {
 
         HttpEntity<String> newDeliveryRequest = new HttpEntity<>(newDeliveryJson, headers);
         restTemplate.exchange("/delivery/new", HttpMethod.POST, newDeliveryRequest, String.class);
+    }
+
+    @Test
+    void when_no_delivery_found_with_given_id_then_no_email_sent() {
+
+        String deliveryJson = """
+                {
+                  "id": 99999999999999,
+                  "timeOfDelivery": "%s",
+                  "latitude": 58.377066,
+                  "longitude": 26.727897
+                }""".formatted(LocalDateTime.now());
+        HttpEntity<String> deliveryRequest = new HttpEntity<>(deliveryJson, httpHeaders());
+        restTemplate.exchange("/delivery/update", HttpMethod.POST, deliveryRequest, String.class);
+
+        // Verify no email is sent
+        assertThat(emailGateway.getSentEmails()).isEmpty();
     }
 
     @TestConfiguration
